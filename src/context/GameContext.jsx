@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useAccount, useDisconnect } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 const GameContext = createContext();
 
@@ -11,18 +13,34 @@ export const useGameContext = () => {
 };
 
 export const GameProvider = ({ children }) => {
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState('0x12...4F');
-    const [settings, setSettings] = useState({
+    // Wagmi hooks for wallet connection
+    const { address, isConnected } = useAccount();
+    const { disconnect } = useDisconnect();
+    const { open } = useWeb3Modal(); // Web3Modal hook to open wallet modal
+
+    const [settings, setSettings] = React.useState({
         sound: true,
         music: true,
         haptics: false,
     });
 
-    const connectWallet = () => {
-        // Mock wallet connection
-        setWalletConnected(true);
-        setWalletAddress('0x12...4F');
+    // Format wallet address for display
+    const formatAddress = (addr) => {
+        if (!addr) return '';
+        return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+    };
+
+    const connectWallet = async () => {
+        try {
+            await open(); // This opens the Web3Modal
+        } catch (error) {
+            console.error('Failed to open wallet modal:', error);
+            throw error;
+        }
+    };
+
+    const disconnectWallet = () => {
+        disconnect();
     };
 
     const updateSettings = (newSettings) => {
@@ -30,10 +48,17 @@ export const GameProvider = ({ children }) => {
     };
 
     const value = {
-        walletConnected,
-        walletAddress,
-        settings,
+        // Wallet state
+        walletConnected: isConnected,
+        walletAddress: address,
+        walletAddressShort: formatAddress(address),
+
+        // Wallet actions
         connectWallet,
+        disconnectWallet,
+
+        // Settings
+        settings,
         updateSettings,
     };
 

@@ -1,14 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AmbientBackground } from '../components/AmbientBackground';
 import { useGameContext } from '../context/GameContext';
 
 export const Landing = () => {
     const navigate = useNavigate();
-    const { connectWallet } = useGameContext();
+    const { connectWallet, walletConnected } = useGameContext();
 
-    const handleConnect = () => {
-        connectWallet();
+    // Navigate to how-to-play when wallet is connected
+    useEffect(() => {
+        if (walletConnected) {
+            navigate('/how-to-play');
+        }
+    }, [walletConnected, navigate]);
+
+    const handleConnect = async () => {
+        try {
+            await connectWallet(); // This opens the modal and waits
+            // Navigation happens via useEffect when walletConnected changes
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+        }
+    };
+
+    const handleSkip = () => {
         navigate('/how-to-play');
     };
 
@@ -70,6 +85,14 @@ export const Landing = () => {
                             <span className="material-symbols-outlined text-[24px]">wallet</span>
                             <span className="text-lg font-bold tracking-wide">Connect Wallet</span>
                         </div>
+                    </button>
+
+                    {/* Skip Button */}
+                    <button
+                        onClick={handleSkip}
+                        className="w-full text-slate-400 hover:text-white transition-colors text-sm font-medium"
+                    >
+                        Skip for now
                     </button>
 
                     {/* Footer Meta Text */}

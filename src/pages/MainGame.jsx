@@ -7,7 +7,7 @@ import { useGameContext } from '../context/GameContext';
 
 export const MainGame = () => {
     const navigate = useNavigate();
-    const { walletAddress } = useGameContext();
+    const { walletConnected, walletAddressShort, connectWallet } = useGameContext();
     const { grid, score, bestScore, gameOver, gameWon, move, restart, keepPlaying } = useGame();
     const swipeHandlers = useSwipe(move);
 
@@ -41,15 +41,27 @@ export const MainGame = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex h-9 items-center justify-center gap-x-2 rounded-full bg-[#1e2636] border border-[#394256] pl-2 pr-3 shadow-lg">
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+
+                {/* Wallet Status */}
+                {walletConnected ? (
+                    <div className="flex h-9 items-center justify-center gap-x-2 rounded-full bg-[#1e2636] border border-[#394256] pl-2 pr-3 shadow-lg">
+                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[#9aa5bc] text-[16px]">wallet</span>
+                            <p className="text-white text-xs font-bold tracking-wide">{walletAddressShort}</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[#9aa5bc] text-[16px]">wallet</span>
-                        <p className="text-white text-xs font-bold tracking-wide">{walletAddress}</p>
-                    </div>
-                </div>
+                ) : (
+                    <button
+                        onClick={connectWallet}
+                        className="flex h-9 items-center justify-center gap-x-2 rounded-full bg-primary/10 border border-primary/30 px-3 shadow-lg hover:bg-primary/20 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-primary text-[16px]">wallet</span>
+                        <p className="text-primary text-xs font-bold tracking-wide">Connect</p>
+                    </button>
+                )}
             </header>
 
             {/* Main Game Area */}
