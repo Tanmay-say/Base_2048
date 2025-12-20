@@ -43,14 +43,14 @@ export const Leaderboard = () => {
 
             <div className="relative flex flex-col min-h-screen w-full max-w-md mx-auto z-10 pb-24">
                 {/* Top App Bar */}
-                <header className="sticky top-0 z-50 flex items-center justify-between p-4 bg-background-dark/80 backdrop-blur-md border-b border-white/5">
+                <header className="relative z-10 flex items-center justify-between px-5 pt-6 pb-2 backdrop-blur-sm sticky top-0">
                     <button
                         onClick={() => navigate('/game')}
-                        className="flex items-center justify-center size-10 rounded-full hover:bg-white/10 transition-colors text-white"
+                        className="group flex size-10 items-center justify-center rounded-full bg-white/5 transition-all hover:bg-white/10 active:scale-95 text-white/80 hover:text-white"
                     >
-                        <span className="material-symbols-outlined">arrow_back</span>
+                        <span className="material-symbols-outlined text-[24px]">close</span>
                     </button>
-                    <h1 className="text-lg font-bold tracking-tight text-white">Leaderboard</h1>
+                    <h2 className="text-xl font-bold tracking-tight text-white flex-1 text-center">Leaderboard</h2>
                     <button className="flex items-center justify-center size-10 rounded-full hover:bg-white/10 transition-colors text-white">
                         <span className="material-symbols-outlined">share</span>
                     </button>

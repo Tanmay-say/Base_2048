@@ -1,9 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../components/BottomNav';
+import { useGameContext } from '../context/GameContext';
+import { useProfile } from '../hooks/useProfile';
+import { uploadAvatar } from '../lib/supabase';
 
 export const Profile = () => {
     const navigate = useNavigate();
+    const { walletConnected, walletAddress, walletAddressShort } = useGameContext();
+    const { profile, loading, updateProfile } = useProfile(walletAddress);
+    const [uploading, setUploading] = useState(false);
+
+    const handleAvatarUpload = async (event) => {
+        try {
+            setUploading(true);
+            const file = event.target.files?.[0];
+            if (!file || !walletAddress) return;
+
+            // Upload avatar
+            const avatarUrl = await uploadAvatar(file, walletAddress);
+
+            // Update profile with new avatar URL
+            await updateProfile({ avatar_url: avatarUrl });
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            alert('Failed to upload avatar. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleCopyAddress = () => {
+        if (walletAddress) {
+            navigator.clipboard.writeText(walletAddress);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Recently';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-background-dark text-white font-display antialiased selection:bg-primary selection:text-white flex items-center justify-center min-h-screen">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-400">Loading profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-background-dark text-white font-display antialiased selection:bg-primary selection:text-white">
@@ -12,42 +60,73 @@ export const Profile = () => {
 
             <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto z-10 pb-28">
                 {/* Top App Bar */}
-                <div className="flex items-center p-4 pt-6 justify-between sticky top-0 z-20 bg-background-dark/80 backdrop-blur-md">
+                <header className="relative z-10 flex items-center justify-between px-5 pt-6 pb-2 backdrop-blur-sm sticky top-0">
                     <button
                         onClick={() => navigate('/game')}
-                        className="text-white/80 hover:text-white transition-colors flex size-10 shrink-0 items-center justify-center rounded-full active:bg-white/5"
+                        className="group flex size-10 items-center justify-center rounded-full bg-white/5 transition-all hover:bg-white/10 active:scale-95 text-white/80 hover:text-white"
                     >
-                        <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+                        <span className="material-symbols-outlined text-[24px]">close</span>
                     </button>
-                    <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Profile</h2>
-                    <button
-                        onClick={() => navigate('/settings')}
-                        className="text-white/80 hover:text-white transition-colors flex size-10 shrink-0 items-center justify-center rounded-full active:bg-white/5"
-                    >
-                        <span className="material-symbols-outlined text-[24px]">settings</span>
-                    </button>
-                </div>
+                    <h2 className="text-xl font-bold tracking-tight text-white flex-1 text-center">Profile</h2>
+
+                </header>
 
                 {/* Profile Header */}
                 <div className="flex flex-col items-center px-4 pt-2 pb-6 w-full">
                     <div className="relative group">
                         {/* Avatar with gradient ring */}
                         <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary via-blue-400 to-purple-600 opacity-70 blur-sm"></div>
-                        <div className="relative h-28 w-28 rounded-full border-4 border-background-dark overflow-hidden bg-surface-dark bg-gradient-to-br from-primary to-blue-900"></div>
-                        <div className="absolute bottom-0 right-0 bg-primary border-4 border-background-dark rounded-full p-1.5 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[14px] font-bold text-white">edit</span>
+                        <div className="relative h-28 w-28 rounded-full border-4 border-background-dark overflow-hidden bg-surface-dark">
+                            {profile?.avatar_url ? (
+                                <img
+                                    src={profile.avatar_url}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-primary to-blue-900"></div>
+                            )}
                         </div>
+                        <label
+                            htmlFor="avatar-upload"
+                            className="absolute bottom-0 right-0 bg-primary border-4 border-background-dark rounded-full p-1.5 flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+                        >
+                            <input
+                                id="avatar-upload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarUpload}
+                                className="hidden"
+                                disabled={uploading || !walletConnected}
+                            />
+                            <span className="material-symbols-outlined text-[14px] font-bold text-white">
+                                {uploading ? 'hourglass_empty' : 'edit'}
+                            </span>
+                        </label>
                     </div>
                     <div className="flex flex-col items-center mt-4 gap-1">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold tracking-tight text-white">alex.base</h1>
-                            <span className="material-symbols-outlined text-blue-400 text-[20px]" title="Verified">verified</span>
+                            <h1 className="text-2xl font-bold tracking-tight text-white">
+                                {profile?.username || (walletConnected ? `Player ${walletAddressShort}` : 'Guest')}
+                            </h1>
+                            {walletConnected && (
+                                <span className="material-symbols-outlined text-blue-400 text-[20px]" title="Verified">verified</span>
+                            )}
                         </div>
-                        <button className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-highlight hover:bg-surface-highlight/80 transition-colors cursor-pointer group/copy">
-                            <p className="text-slate-400 text-sm font-mono group-hover/copy:text-white transition-colors">0x71C...9A2b</p>
-                            <span className="material-symbols-outlined text-slate-500 text-[14px] group-hover/copy:text-white transition-colors">content_copy</span>
-                        </button>
-                        <p className="text-slate-500 text-xs font-medium mt-1">Joined Jan 2024</p>
+                        {walletConnected && (
+                            <button
+                                onClick={handleCopyAddress}
+                                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-highlight hover:bg-surface-highlight/80 transition-colors cursor-pointer group/copy"
+                            >
+                                <p className="text-slate-400 text-sm font-mono group-hover/copy:text-white transition-colors">
+                                    {walletAddressShort}
+                                </p>
+                                <span className="material-symbols-outlined text-slate-500 text-[14px] group-hover/copy:text-white transition-colors">content_copy</span>
+                            </button>
+                        )}
+                        <p className="text-slate-500 text-xs font-medium mt-1">
+                            Joined {formatDate(profile?.created_at)}
+                        </p>
                     </div>
                 </div>
 
@@ -62,10 +141,10 @@ export const Profile = () => {
                                     <span className="material-symbols-outlined text-[16px]">emoji_events</span>
                                     Highest Tile
                                 </span>
-                                <span className="text-4xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(13,85,242,0.5)]">4096</span>
+                                <span className="text-4xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(13,85,242,0.5)]">{profile?.highest_tile || 0}</span>
                             </div>
                             <div className="h-16 w-16 bg-[#ecc400] rounded-lg shadow-[0_0_15px_rgba(236,196,0,0.4)] flex items-center justify-center rotate-6 group-hover:rotate-12 transition-transform z-10 border-2 border-[#fffad6]">
-                                <span className="text-[#776e65] font-bold text-xl">4096</span>
+                                <span className="text-[#776e65] font-bold text-xl">{profile?.highest_tile || 0}</span>
                             </div>
                         </div>
 
@@ -78,7 +157,7 @@ export const Profile = () => {
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Games Played</p>
-                                <p className="text-xl font-bold text-white">1,243</p>
+                                <p className="text-xl font-bold text-white">{(profile?.games_played || 0).toLocaleString()}</p>
                             </div>
                         </div>
 
@@ -91,7 +170,7 @@ export const Profile = () => {
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">High Score</p>
-                                <p className="text-xl font-bold text-white">84,200</p>
+                                <p className="text-xl font-bold text-white">{(profile?.high_score || 0).toLocaleString()}</p>
                             </div>
                         </div>
 
