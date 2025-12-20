@@ -130,11 +130,13 @@ export class GameManager {
 
     // Get the vector representing the chosen direction
     getVector(direction) {
+        // Note: Grid uses cells[x][y] where x is ROW (vertical) and y is COLUMN (horizontal)
+        // So x changes for up/down, y changes for left/right
         const map = {
-            0: { x: 0, y: -1 }, // Up
-            1: { x: 1, y: 0 },  // Right
-            2: { x: 0, y: 1 },  // Down
-            3: { x: -1, y: 0 }  // Left
+            0: { x: -1, y: 0 }, // Up (decrease row)
+            1: { x: 0, y: 1 },  // Right (increase column)
+            2: { x: 1, y: 0 },  // Down (increase row)
+            3: { x: 0, y: -1 }  // Left (decrease column)
         };
         return map[direction];
     }

@@ -12,7 +12,7 @@ export const useGame = () => {
     const [bestScore, setBestScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [gameWon, setGameWon] = useState(false);
-    const [newTile, setNewTile] = useState(null);
+    const [previousStates, setPreviousStates] = useState([]);
 
     // Initialize game
     useEffect(() => {
@@ -58,21 +58,55 @@ export const useGame = () => {
         }
     }, [bestScore]);
 
+    // Save current state before making a move
+    const saveState = useCallback(() => {
+        if (!gameManager) return;
+
+        const currentState = gameManager.serialize();
+        setPreviousStates(prev => {
+            const newStates = [...prev, currentState];
+            // Keep only last 10 states to prevent memory issues
+            return newStates.slice(-10);
+        });
+    }, [gameManager]);
+
     // Move tiles
     const move = useCallback((direction) => {
         if (!gameManager) return;
 
+        // Save state before move for undo
+        saveState();
+
         const moved = gameManager.move(direction);
         if (moved) {
             updateState(gameManager);
+        } else {
+            // If no move happened, remove the saved state
+            setPreviousStates(prev => prev.slice(0, -1));
         }
-    }, [gameManager, updateState]);
+    }, [gameManager, updateState, saveState]);
+
+    // Undo last move
+    const undo = useCallback(() => {
+        if (!gameManager || previousStates.length === 0) return;
+
+        // Get the last saved state
+        const lastState = previousStates[previousStates.length - 1];
+
+        // Load that state
+        gameManager.loadState(lastState);
+        updateState(gameManager);
+
+        // Remove the used state from history
+        setPreviousStates(prev => prev.slice(0, -1));
+    }, [gameManager, previousStates, updateState]);
 
     // Restart game
     const restart = useCallback(() => {
         if (!gameManager) return;
 
         gameManager.restart();
+        setPreviousStates([]); // Clear undo history
         updateState(gameManager);
     }, [gameManager, updateState]);
 
@@ -84,23 +118,31 @@ export const useGame = () => {
         updateState(gameManager);
     }, [gameManager, updateState]);
 
-    // Keyboard controls
+    // Keyboard controls - Fixed to match original 2048
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (!gameManager || gameManager.isGameTerminated()) return;
 
+            // Check for modifiers
+            const modifiers = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+            if (modifiers) return;
+
             const keyMap = {
-                'ArrowUp': 0,
-                'ArrowRight': 1,
-                'ArrowDown': 2,
-                'ArrowLeft': 3,
-                'w': 0,
-                'd': 1,
-                's': 2,
-                'a': 3,
+                38: 0,  // ArrowUp
+                39: 1,  // ArrowRight
+                40: 2,  // ArrowDown
+                37: 3,  // ArrowLeft
+                75: 0,  // K (Vim up)
+                76: 1,  // L (Vim right)
+                74: 2,  // J (Vim down)
+                72: 3,  // H (Vim left)
+                87: 0,  // W
+                68: 1,  // D
+                83: 2,  // S
+                65: 3   // A
             };
 
-            const direction = keyMap[event.key];
+            const direction = keyMap[event.which || event.keyCode];
             if (direction !== undefined) {
                 event.preventDefault();
                 move(direction);
@@ -120,6 +162,7 @@ export const useGame = () => {
         move,
         restart,
         keepPlaying,
-        newTile
+        undo,
+        canUndo: previousStates.length > 0
     };
 };

@@ -8,7 +8,7 @@ import { useGameContext } from '../context/GameContext';
 export const MainGame = () => {
     const navigate = useNavigate();
     const { walletConnected, walletAddressShort, connectWallet } = useGameContext();
-    const { grid, score, bestScore, gameOver, gameWon, move, restart, keepPlaying } = useGame();
+    const { grid, score, bestScore, gameOver, gameWon, move, restart, keepPlaying, undo, canUndo } = useGame();
     const swipeHandlers = useSwipe(move);
 
     // Navigate to game over screen when game ends
@@ -77,8 +77,10 @@ export const MainGame = () => {
                         <span className="material-symbols-outlined text-[24px]">info</span>
                     </button>
                     <button
-                        onClick={restart}
-                        className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#1e2636] border border-[#394256] text-[#9aa5bc] hover:text-white hover:bg-[#2a3449] active:scale-95 transition-all duration-150 shadow-lg group"
+                        onClick={undo}
+                        disabled={!canUndo}
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl bg-[#1e2636] border border-[#394256] active:scale-95 transition-all duration-150 shadow-lg group ${canUndo ? 'text-[#9aa5bc] hover:text-white hover:bg-[#2a3449] cursor-pointer' : 'text-[#394256] cursor-not-allowed opacity-50'
+                            }`}
                     >
                         <span className="material-symbols-outlined text-[24px] group-hover:-rotate-90 transition-transform duration-300">undo</span>
                     </button>
