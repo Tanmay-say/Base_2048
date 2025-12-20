@@ -113,10 +113,10 @@ export const MainGame = () => {
                 <div className="glass-panel rounded-2xl p-2 flex items-center justify-between gap-3 shadow-2xl">
                     <div className="flex gap-1 pl-1">
                         <button
-                            onClick={restart}
+                            onClick={() => navigate('/profile')}
                             className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors text-[#9aa5bc] hover:text-white"
                         >
-                            <span className="material-symbols-outlined text-[24px]">undo</span>
+                            <span className="material-symbols-outlined text-[24px]">person</span>
                         </button>
                         <button
                             onClick={() => navigate('/leaderboard')}

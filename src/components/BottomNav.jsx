@@ -8,52 +8,50 @@ export const BottomNav = () => {
     const isActive = (path) => location.pathname === path;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 w-full z-50 glass-panel pb-safe">
-            <div className="flex justify-around items-center h-16 max-w-md mx-auto px-2">
+        <footer className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 px-6 pb-8">
+            <div className="glass-panel rounded-2xl p-2 flex items-center justify-between gap-3 shadow-2xl">
+                <div className="flex gap-1 pl-1">
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-colors ${isActive('/profile')
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-white/5 active:bg-white/10 text-[#9aa5bc] hover:text-white'
+                            }`}
+                    >
+                        <span className="material-symbols-outlined text-[24px]">person</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/leaderboard')}
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-colors ${isActive('/leaderboard')
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-white/5 active:bg-white/10 text-[#9aa5bc] hover:text-white'
+                            }`}
+                    >
+                        <span className="material-symbols-outlined text-[24px]">leaderboard</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/settings')}
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-colors ${isActive('/settings')
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-white/5 active:bg-white/10 text-[#9aa5bc] hover:text-white'
+                            }`}
+                    >
+                        <span className="material-symbols-outlined text-[24px]">settings</span>
+                    </button>
+                </div>
                 <button
                     onClick={() => navigate('/game')}
-                    className="flex flex-col items-center justify-center w-16 gap-1 group"
+                    className="flex-1 h-14 bg-primary hover:bg-blue-600 active:scale-95 transition-all duration-150 rounded-xl flex items-center justify-center gap-2 shadow-glow-blue relative overflow-hidden group"
                 >
-                    <div className={`p-1.5 rounded-xl transition-colors ${isActive('/game') ? 'bg-primary/10' : 'group-hover:bg-white/5'}`}>
-                        <span className={`material-symbols-outlined transition-colors ${isActive('/game') ? 'text-primary' : 'text-slate-400 group-hover:text-white'}`}>
-                            grid_view
-                        </span>
-                    </div>
-                    <span className={`text-[10px] font-medium transition-colors ${isActive('/game') ? 'text-primary font-bold' : 'text-slate-400 group-hover:text-white'}`}>
-                        Game
-                    </span>
-                </button>
-
-                <button
-                    onClick={() => navigate('/leaderboard')}
-                    className="flex flex-col items-center justify-center w-16 gap-1 group"
-                >
-                    <div className={`p-1.5 rounded-xl transition-colors ${isActive('/leaderboard') ? 'bg-primary/10' : 'group-hover:bg-white/5'}`}>
-                        <span className={`material-symbols-outlined transition-colors ${isActive('/leaderboard') ? 'text-primary' : 'text-slate-400 group-hover:text-white'}`}>
-                            leaderboard
-                        </span>
-                    </div>
-                    <span className={`text-[10px] font-medium transition-colors ${isActive('/leaderboard') ? 'text-primary font-bold' : 'text-slate-400 group-hover:text-white'}`}>
-                        Rank
-                    </span>
-                </button>
-
-                <button
-                    onClick={() => navigate('/profile')}
-                    className="flex flex-col items-center justify-center w-16 gap-1 group"
-                >
-                    <div className={`p-1.5 rounded-xl transition-colors ${isActive('/profile') ? 'bg-primary/10' : 'group-hover:bg-white/5'}`}>
-                        <span className={`material-symbols-outlined transition-colors ${isActive('/profile') ? 'text-primary' : 'text-slate-400 group-hover:text-white'}`}>
-                            person
-                        </span>
-                    </div>
-                    <span className={`text-[10px] font-medium transition-colors ${isActive('/profile') ? 'text-primary font-bold' : 'text-slate-400 group-hover:text-white'}`}>
-                        Profile
-                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                    <span className="material-symbols-outlined text-white font-bold">add_circle</span>
+                    <span className="text-white font-bold tracking-wider text-base">NEW GAME</span>
                 </button>
             </div>
-            {/* Safe Area Spacer for iOS */}
-            <div className="h-5 w-full"></div>
-        </div>
+            <div className="mt-6 flex justify-center items-center gap-2 opacity-60">
+                <span className="text-xs text-[#5b6882] font-medium tracking-widest uppercase">Powered by BASE</span>
+                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(0,81,255,0.8)]"></div>
+            </div>
+        </footer>
     );
 };
