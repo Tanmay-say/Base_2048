@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameGrid } from '../components/GameGrid';
 import { useGame } from '../hooks/useGame';
@@ -11,13 +11,6 @@ export const MainGame = () => {
     const { walletConnected, walletAddressShort, connectWallet } = useGameContext();
     const { grid, score, bestScore, gameOver, gameWon, move, restart, keepPlaying, undo, canUndo } = useGame();
     const swipeHandlers = useSwipe(move);
-
-    // Navigate to game over screen when game ends
-    useEffect(() => {
-        if (gameOver) {
-            setTimeout(() => navigate('/game-over'), 500);
-        }
-    }, [gameOver, navigate]);
 
     return (
         <div className="relative flex w-full flex-col max-w-md mx-auto bg-background-dark overflow-hidden fixed inset-0" style={{ height: '100svh' }}>
@@ -103,14 +96,47 @@ export const MainGame = () => {
                 {/* Win Message */}
                 {gameWon && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-surface-dark p-8 rounded-2xl border border-primary/30 text-center">
+                        <div className="bg-surface-dark p-8 rounded-2xl border border-primary/30 text-center max-w-xs mx-auto">
                             <h2 className="text-3xl font-bold text-white mb-4">You Win!</h2>
                             <button
                                 onClick={keepPlaying}
-                                className="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold"
+                                className="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold w-full"
                             >
                                 Keep Playing
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Game Over Overlay (in-place, no navigation) */}
+                {gameOver && !gameWon && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-surface-dark/95 border border-white/10 rounded-2xl px-6 py-5 max-w-xs w-[90%] text-center shadow-2xl">
+                            <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Game Over</h2>
+                            <p className="text-sm text-slate-400 mb-4">
+                                No more moves left. You can
+                                <span className="font-semibold text-white"> undo your last move</span> to try again
+                                or start a new game.
+                            </p>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={undo}
+                                    disabled={!canUndo}
+                                    className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${canUndo
+                                        ? 'bg-primary text-white hover:bg-blue-600'
+                                        : 'bg-surface-dark text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">undo</span>
+                                    Undo Last Move
+                                </button>
+                                <button
+                                    onClick={restart}
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-surface-dark text-slate-200 border border-white/10 hover:bg-surface-highlight transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">replay</span>
+                                    New Game
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
