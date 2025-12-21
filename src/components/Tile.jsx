@@ -28,10 +28,10 @@ export const Tile = ({ value, position }) => {
     const tileSize = getTileSize(value);
 
     // Calculate position based on grid layout
-    // Grid has 4 columns/rows with gap-3 (0.75rem = 12px)
+    // Grid has 4 columns/rows with gap-2 (0.5rem = 8px)
     // Each cell is 25% width minus gap
-    const cellSize = 'calc((100% - 2.25rem) / 4)'; // (100% - 3 gaps * 0.75rem) / 4 cells
-    const gapSize = '0.75rem';
+    const cellSize = 'calc((100% - 1.5rem) / 4)'; // (100% - 3 gaps * 0.5rem) / 4 cells
+    const gapSize = '0.5rem';
 
     return (
         <div

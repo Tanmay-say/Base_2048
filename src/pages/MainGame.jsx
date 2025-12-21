@@ -19,7 +19,7 @@ export const MainGame = () => {
     }, [gameOver, navigate]);
 
     return (
-        <div className="relative flex h-screen w-full flex-col max-w-md mx-auto bg-background-dark">
+        <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-background-dark overflow-hidden">
             {/* Ambient Background */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]"></div>
@@ -28,7 +28,7 @@ export const MainGame = () => {
             </div>
 
             {/* Header */}
-            <header className="relative z-10 flex items-start justify-between px-6 pt-12 pb-4 w-full">
+            <header className="relative z-10 flex items-start justify-between px-4 pt-6 pb-3 w-full">
                 <div className="flex flex-col gap-1">
                     <div className="flex gap-4">
                         <div className="flex flex-col">
@@ -66,10 +66,10 @@ export const MainGame = () => {
 
             {/* Main Game Area */}
             <main
-                className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 w-full mb-10"
+                className="relative z-10 flex-1 flex flex-col justify-center items-center px-3 w-full mb-4"
                 {...swipeHandlers}
             >
-                <div className="w-full max-w-[360px] flex justify-end gap-3 mb-4 pr-1">
+                <div className="w-full max-w-[min(90vw,400px)] flex justify-end gap-2 mb-3 pr-1">
                     <button
                         onClick={() => navigate('/how-to-play')}
                         className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#1e2636] border border-[#394256] text-[#9aa5bc] hover:text-white hover:bg-[#2a3449] active:scale-95 transition-all duration-150 shadow-lg group"
@@ -109,7 +109,7 @@ export const MainGame = () => {
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 px-6 pb-8 w-full">
+            <footer className="relative z-10 px-4 pb-4 w-full">
                 <div className="glass-panel rounded-2xl p-2 flex items-center justify-between gap-3 shadow-2xl">
                     <div className="flex gap-1 pl-1">
                         <button

@@ -13,6 +13,7 @@ export const useGame = () => {
     const [gameOver, setGameOver] = useState(false);
     const [gameWon, setGameWon] = useState(false);
     const [previousStates, setPreviousStates] = useState([]);
+    const [highestTile, setHighestTile] = useState(0);
 
     // Initialize game
     useEffect(() => {
@@ -44,8 +45,20 @@ export const useGame = () => {
         setGameOver(gm.over);
         setGameWon(gm.won && !gm.keepPlaying);
 
+        // Calculate highest tile from grid cells
+        let maxTile = 0;
+        gm.grid.cells.forEach(column => {
+            column.forEach(cell => {
+                if (cell && cell.value > maxTile) {
+                    maxTile = cell.value;
+                }
+            });
+        });
+        setHighestTile(maxTile);
+
         // Update best score
-        if (gm.score > bestScore) {
+        const currentBest = parseInt(localStorage.getItem(BEST_SCORE_KEY) || '0', 10);
+        if (gm.score > currentBest) {
             setBestScore(gm.score);
             localStorage.setItem(BEST_SCORE_KEY, gm.score.toString());
         }
@@ -54,9 +67,12 @@ export const useGame = () => {
         if (!gm.over) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gm.serialize()));
         } else {
+            // Game is over - save final score and highest tile for GameOver screen
+            localStorage.setItem('base2048_lastScore', gm.score.toString());
+            localStorage.setItem('base2048_highestTile', maxTile.toString());
             localStorage.removeItem(STORAGE_KEY);
         }
-    }, [bestScore]);
+    }, []); // Remove bestScore dependency to prevent infinite loop
 
     // Save current state before making a move
     const saveState = useCallback(() => {
@@ -159,6 +175,7 @@ export const useGame = () => {
         bestScore,
         gameOver,
         gameWon,
+        highestTile,
         move,
         restart,
         keepPlaying,

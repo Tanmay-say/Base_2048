@@ -19,9 +19,9 @@ export const GameGrid = ({ grid }) => {
     });
 
     return (
-        <div className="relative w-full aspect-square max-w-[360px] bg-surface-dark rounded-2xl p-3 shadow-2xl border border-[#394256]/50 backdrop-blur-sm">
+        <div className="relative w-full aspect-square max-w-[min(90vw,400px)] bg-surface-dark rounded-2xl p-2.5 shadow-2xl border border-[#394256]/50 backdrop-blur-sm">
             {/* Empty grid cells */}
-            <div className="grid grid-cols-4 grid-rows-4 gap-3 w-full h-full">
+            <div className="grid grid-cols-4 grid-rows-4 gap-2 w-full h-full">
                 {Array.from({ length: 16 }).map((_, i) => (
                     <div
                         key={i}
@@ -31,7 +31,7 @@ export const GameGrid = ({ grid }) => {
             </div>
 
             {/* Tiles */}
-            <div className="absolute inset-3">
+            <div className="absolute inset-[0.625rem]">
                 {tiles.map((tile) => (
                     <Tile
                         key={tile.key}

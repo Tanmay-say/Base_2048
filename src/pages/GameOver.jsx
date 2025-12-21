@@ -1,13 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameContext } from '../context/GameContext';
+import { useProfile } from '../hooks/useProfile';
+import { useLeaderboard } from '../hooks/useLeaderboard';
+import { useGame } from '../hooks/useGame';
 
 export const GameOver = () => {
     const navigate = useNavigate();
-    const { walletAddress } = useGameContext();
+    const { walletAddress, walletConnected, walletAddressShort } = useGameContext();
+    const { profile, updateStats } = useProfile(walletAddress);
+    const { leaderboard, submitScore } = useLeaderboard('global', 3);
+    const { score, bestScore, highestTile } = useGame();
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
-    // Mock data - in real app, this would come from game state
-    const finalScore = localStorage.getItem('base2048_lastScore') || '4096';
+    // Get final score from localStorage or game context
+    const finalScore = score || parseInt(localStorage.getItem('base2048_lastScore')) || 0;
+    const finalHighestTile = highestTile || parseInt(localStorage.getItem('base2048_highestTile')) || 0;
+
+    useEffect(() => {
+        // Submit score when component mounts (only once)
+        if (walletConnected && walletAddress && !submitted && finalScore > 0) {
+            handleScoreSubmission();
+        }
+    }, [walletConnected, walletAddress, submitted]);
+
+    const handleScoreSubmission = async () => {
+        if (submitting || submitted) return;
+
+        try {
+            setSubmitting(true);
+
+            // Submit score to leaderboard
+            await submitScore(walletAddress, finalScore, finalHighestTile, 0);
+
+            // Update profile stats
+            await updateStats(finalScore, finalHighestTile);
+
+            setSubmitted(true);
+            console.log('Score submitted successfully!');
+        } catch (error) {
+            console.error('Error submitting score:', error);
+            // Don't block the user if submission fails
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="bg-background-dark text-white min-h-screen flex flex-col font-display overflow-hidden relative">
@@ -22,15 +60,19 @@ export const GameOver = () => {
                 {/* Top Bar */}
                 <div className="flex justify-between items-center w-full">
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                        <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Live</span>
+                        <div className={`w-2 h-2 rounded-full ${submitted ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></div>
+                        <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+                            {submitting ? 'Submitting...' : submitted ? 'Submitted' : 'Live'}
+                        </span>
                     </div>
-                    <div className="flex items-center gap-2 bg-surface-dark/80 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-sm">
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-400 to-primary flex items-center justify-center text-[10px] font-bold text-white">
-                            0x
+                    {walletConnected && (
+                        <div className="flex items-center gap-2 bg-surface-dark/80 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-sm">
+                            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-400 to-primary flex items-center justify-center text-[10px] font-bold text-white">
+                                0x
+                            </div>
+                            <span className="text-sm font-medium text-slate-200">{walletAddressShort}</span>
                         </div>
-                        <span className="text-sm font-medium text-slate-200">{walletAddress}</span>
-                    </div>
+                    )}
                 </div>
 
                 {/* Central Score Display */}
@@ -64,41 +106,46 @@ export const GameOver = () => {
                             </span>
                         </div>
                         <div className="space-y-3">
-                            {/* Rank 1 (Current User) */}
-                            <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/30 rounded-xl relative overflow-hidden group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 flex items-center justify-center bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/20 text-sm">1</div>
-                                    <div className="flex flex-col">
-                                        <span className="text-white font-bold text-sm">You</span>
-                                        <span className="text-xs text-primary/80">{walletAddress}</span>
-                                    </div>
+                            {leaderboard.length > 0 ? (
+                                leaderboard.map((player, index) => {
+                                    const isCurrentUser = player.wallet_address === walletAddress;
+                                    return (
+                                        <div
+                                            key={player.id || index}
+                                            className={`flex items-center justify-between p-3 rounded-xl relative overflow-hidden group transition-colors border ${isCurrentUser
+                                                ? 'bg-primary/10 border-primary/30'
+                                                : 'hover:bg-white/5 border-transparent hover:border-white/5'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className={`w-8 h-8 flex items-center justify-center font-bold rounded-lg text-sm ${index === 0
+                                                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                                        : 'bg-surface-dark text-slate-400 border border-white/5'
+                                                        }`}
+                                                >
+                                                    {player.rank || index + 1}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className={`font-bold text-sm ${isCurrentUser ? 'text-white' : 'text-slate-300'}`}>
+                                                        {isCurrentUser ? 'You' : player.name}
+                                                    </span>
+                                                    <span className={`text-xs ${isCurrentUser ? 'text-primary/80' : 'text-slate-500'}`}>
+                                                        {player.address}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className={`text-xl font-bold ${isCurrentUser ? 'text-white' : index === 0 ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                {player.score.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center py-8 text-slate-500">
+                                    <p className="text-sm">No scores yet. Be the first!</p>
                                 </div>
-                                <span className="text-xl font-bold text-white">{finalScore}</span>
-                            </div>
-
-                            {/* Rank 2 */}
-                            <div className="flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 flex items-center justify-center bg-surface-dark text-slate-400 font-bold rounded-lg border border-white/5 text-sm">2</div>
-                                    <div className="flex flex-col">
-                                        <span className="text-slate-300 font-medium text-sm">based_god</span>
-                                        <span className="text-xs text-slate-500">0xbd...cc</span>
-                                    </div>
-                                </div>
-                                <span className="text-lg font-bold text-slate-400">2,048</span>
-                            </div>
-
-                            {/* Rank 3 */}
-                            <div className="flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 flex items-center justify-center bg-surface-dark text-slate-500 font-bold rounded-lg border border-white/5 text-sm">3</div>
-                                    <div className="flex flex-col">
-                                        <span className="text-slate-300 font-medium text-sm">cryptopunk</span>
-                                        <span className="text-xs text-slate-500">0x12...99</span>
-                                    </div>
-                                </div>
-                                <span className="text-lg font-bold text-slate-500">1,024</span>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
