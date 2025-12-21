@@ -1,6 +1,8 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { storage } from '../utils/localStorage';
+import soundManager from '../utils/soundManager';
 
 const GameContext = createContext();
 
@@ -16,13 +18,20 @@ export const GameProvider = ({ children }) => {
     // Wagmi hooks for wallet connection
     const { address, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
-    const { open } = useWeb3Modal(); // Web3Modal hook to open wallet modal
+    const { open } = useWeb3Modal();
 
-    const [settings, setSettings] = React.useState({
-        sound: true,
-        music: true,
-        haptics: false,
+    // Load settings from localStorage
+    const [gridSize, setGridSizeState] = useState(storage.getGridSize());
+    const [settings, setSettings] = useState({
+        sound: storage.getSoundEnabled(),
+        music: storage.getMusicEnabled(),
+        haptics: storage.getHapticsEnabled(),
     });
+
+    // Initialize sound manager
+    useEffect(() => {
+        soundManager.setEnabled(settings.sound);
+    }, [settings.sound]);
 
     // Format wallet address for display
     const formatAddress = (addr) => {
@@ -32,7 +41,7 @@ export const GameProvider = ({ children }) => {
 
     const connectWallet = async () => {
         try {
-            await open(); // This opens the Web3Modal
+            await open();
         } catch (error) {
             console.error('Failed to open wallet modal:', error);
             throw error;
@@ -44,7 +53,28 @@ export const GameProvider = ({ children }) => {
     };
 
     const updateSettings = (newSettings) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
+        setSettings(prev => {
+            const updated = { ...prev, ...newSettings };
+            
+            // Persist to localStorage
+            if ('sound' in newSettings) {
+                storage.setSoundEnabled(newSettings.sound);
+                soundManager.setEnabled(newSettings.sound);
+            }
+            if ('music' in newSettings) {
+                storage.setMusicEnabled(newSettings.music);
+            }
+            if ('haptics' in newSettings) {
+                storage.setHapticsEnabled(newSettings.haptics);
+            }
+            
+            return updated;
+        });
+    };
+
+    const setGridSize = (size) => {
+        storage.setGridSize(size);
+        setGridSizeState(size);
     };
 
     const value = {
@@ -60,6 +90,10 @@ export const GameProvider = ({ children }) => {
         // Settings
         settings,
         updateSettings,
+
+        // Grid size
+        gridSize,
+        setGridSize,
     };
 
     return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

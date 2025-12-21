@@ -200,25 +200,39 @@ export const useProfile = (walletAddress) => {
         ? Math.round(profile.total_score / profile.games_played)
         : 0;
 
-    // Sync best score from localStorage to database
+    // Sync best score between localStorage and database (two-way)
     const syncBestScoreFromLocalStorage = async () => {
         try {
-            const localBestScore = parseInt(localStorage.getItem('base2048_bestScore') || '0', 10);
-            console.log('Syncing localStorage bestScore to database:', localBestScore);
+            const localBestScore = parseInt(localStorage.getItem('base2048_best_score') || '0', 10);
+            console.log('Syncing best score. Local:', localBestScore, 'DB:', profile?.high_score);
 
-            if (!profile || !walletAddress || localBestScore === 0) {
-                console.log('Skipping sync - no profile or local best score');
+            if (!profile || !walletAddress) {
+                console.log('Skipping sync - no profile or wallet');
                 return;
             }
 
-            // Only update if localStorage has a higher score than database
-            if (localBestScore > (profile.high_score || 0)) {
-                console.log('localStorage score is higher, updating database from', profile.high_score, 'to', localBestScore);
-                await updateProfile({ high_score: localBestScore });
-                console.log('Sync complete!');
-            } else {
-                console.log('Database already has the best score:', profile.high_score);
+            const dbBest = profile.high_score || 0;
+
+            // Case 1: local > DB → push up to DB
+            if (localBestScore > dbBest) {
+                console.log('Local best is higher, updating DB from', dbBest, 'to', localBestScore);
+                const updated = await updateProfile({ high_score: localBestScore });
+                console.log('DB sync complete', updated?.high_score);
+                return;
             }
+
+            // Case 2: DB > local → pull down into localStorage
+            if (dbBest > localBestScore) {
+                console.log('DB best is higher, updating localStorage from', localBestScore, 'to', dbBest);
+                try {
+                    localStorage.setItem('base2048_best_score', String(dbBest));
+                } catch (e) {
+                    console.warn('Failed to write best score to localStorage:', e);
+                }
+                return;
+            }
+
+            console.log('Best score already in sync');
         } catch (err) {
             console.error('Error syncing best score:', err);
         }

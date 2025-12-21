@@ -20,7 +20,7 @@ export const MainGame = () => {
     }, [gameOver, navigate]);
 
     return (
-        <div className="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-background-dark overflow-hidden">
+        <div className="relative flex w-full flex-col max-w-md mx-auto bg-background-dark overflow-hidden fixed inset-0" style={{ height: '100svh' }}>
             {/* Ambient Background */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]"></div>
@@ -29,7 +29,7 @@ export const MainGame = () => {
             </div>
 
             {/* Header */}
-            <header className="relative z-10 flex items-start justify-between px-4 pt-6 pb-3 w-full">
+            <header className="relative z-10 flex items-start justify-between px-4 pb-3 w-full" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
                 <div className="flex flex-col gap-1">
                     <div className="flex gap-4">
                         <div className="flex flex-col">
@@ -73,7 +73,8 @@ export const MainGame = () => {
 
             {/* Main Game Area */}
             <main
-                className="relative z-10 flex-1 flex flex-col justify-center items-center px-3 w-full mb-4"
+                data-testid="game-board"
+                className="relative z-10 flex-1 flex flex-col justify-center items-center px-3 w-full mb-4 touch-none"
                 {...swipeHandlers}
             >
                 <div className="w-full max-w-[min(90vw,400px)] flex justify-end gap-2 mb-3 pr-1">
@@ -116,7 +117,7 @@ export const MainGame = () => {
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 px-4 pb-4 w-full">
+            <footer className="relative z-10 px-4 w-full" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
                 <div className="glass-panel rounded-2xl p-2 flex items-center justify-between gap-3 shadow-2xl">
                     <div className="flex gap-1 pl-1">
                         <button

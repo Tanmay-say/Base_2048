@@ -23,29 +23,29 @@ const getTileSize = (value) => {
     return 'text-3xl';
 };
 
-export const Tile = ({ value, position }) => {
+export const Tile = React.memo(({ value, position, gridSize = 4 }) => {
     const tileColor = getTileColor(value);
     const tileSize = getTileSize(value);
 
     // Calculate position based on grid layout
-    // Grid has 4 columns/rows with gap-2 (0.5rem = 8px)
-    // Each cell is 25% width minus gap
-    const cellSize = 'calc((100% - 1.5rem) / 4)'; // (100% - 3 gaps * 0.5rem) / 4 cells
     const gapSize = '0.5rem';
+    const cellSize = `calc((100% - ${gapSize} * ${gridSize - 1}) / ${gridSize})`;
 
     return (
         <div
             className={`
-        absolute rounded-lg flex items-center justify-center
-        border border-white/5 backdrop-blur-sm
-        transition-all duration-100 ease-in-out
-        ${tileColor} ${tileSize}
-      `}
+                absolute rounded-lg flex items-center justify-center
+                border border-white/5 backdrop-blur-sm
+                transition-all duration-100 ease-[cubic-bezier(0.4,0,0.2,1)]
+                ${tileColor} ${tileSize}
+            `}
             style={{
                 width: cellSize,
                 height: cellSize,
                 left: `calc(${position.y} * (${cellSize} + ${gapSize}))`,
                 top: `calc(${position.x} * (${cellSize} + ${gapSize}))`,
+                transform: 'scale(1)',
+                willChange: 'transform, left, top'
             }}
         >
             {value >= 8 && (
@@ -54,4 +54,6 @@ export const Tile = ({ value, position }) => {
             <span className="text-white font-bold relative z-10">{value}</span>
         </div>
     );
-};
+});
+
+Tile.displayName = 'Tile';

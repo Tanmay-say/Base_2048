@@ -3,22 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useGameContext } from '../context/GameContext';
 import { useProfile } from '../hooks/useProfile';
 import { useLeaderboard } from '../hooks/useLeaderboard';
-import { useGame } from '../hooks/useGame';
 
 export const GameOver = () => {
     const navigate = useNavigate();
     const { walletAddress, walletConnected, walletAddressShort } = useGameContext();
     const { profile, updateStats } = useProfile(walletAddress);
     const { leaderboard, submitScore } = useLeaderboard('global', 3);
-    const { score, bestScore, highestTile } = useGame();
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
-    // Get final score from localStorage or game context
-    const finalScore = score || parseInt(localStorage.getItem('base2048_lastScore')) || 0;
-    const finalHighestTile = highestTile || parseInt(localStorage.getItem('base2048_highestTile')) || 0;
-    // Get best score from localStorage - this is the user's all-time high score
-    const finalBestScore = bestScore || parseInt(localStorage.getItem('base2048_bestScore')) || 0;
+    // Get final score from persisted last game result
+    const finalScore = parseInt(localStorage.getItem('base2048_last_score') || '0', 10) || 0;
+    const finalHighestTile = parseInt(localStorage.getItem('base2048_last_highest_tile') || '0', 10) || 0;
+    // Get best score from local cache (synced with DB via profile page)
+    const finalBestScore = parseInt(localStorage.getItem('base2048_best_score') || '0', 10) || 0;
 
     console.log('GameOver initialized:', { finalScore, finalBestScore, finalHighestTile });
 

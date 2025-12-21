@@ -4,12 +4,15 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- Viewport Configuration for PWA and Mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
   <title>Base 2048 - Blockchain Game</title>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0d55f2" />
+  <meta name="theme-color" content="#0051ff" />
 
   <!-- iOS PWA Support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,6 +20,9 @@
   <meta name="apple-mobile-web-app-title" content="Base 2048" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
+  <!-- Prevent Zoom and Scrolling -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  
   <!-- SEO and Description -->
   <meta name="description"
     content="Play 2048 on Base blockchain and earn rewards. A fun puzzle game with Web3 integration." />
@@ -81,8 +87,8 @@
           },
           animation: {
             'shimmer': 'shimmer 2s infinite',
-            'tile-appear': 'tile-appear 200ms ease-out',
-            'tile-merge': 'tile-merge 200ms ease-out',
+            'tile-appear': 'tile-appear 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            'tile-merge': 'tile-merge 200ms cubic-bezier(0.4, 0, 0.2, 1)',
           },
         },
       },
@@ -90,10 +96,19 @@
   </script>
 
   <style>
-    body {
-      min-height: 100dvh;
+    html, body {
+      width: 100vw;
+      height: 100svh;
+      overflow: hidden;
+      position: fixed;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      overscroll-behavior: none;
+      touch-action: pan-x pan-y;
+    }
+
+    body {
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
     .glass-panel {
@@ -121,10 +136,25 @@
       width: 0px;
       background: transparent;
     }
+
+    /* Prevent pull-to-refresh */
+    body {
+      overscroll-behavior-y: contain;
+    }
+
+    /* No scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 
-<body class="bg-background-dark text-white font-display overflow-x-hidden">
+<body class="bg-background-dark text-white font-display">
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>

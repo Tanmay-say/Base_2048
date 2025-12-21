@@ -163,10 +163,14 @@ export const Profile = () => {
                                     <span className="material-symbols-outlined text-[16px]">emoji_events</span>
                                     Highest Tile
                                 </span>
-                                <span className="text-4xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(13,85,242,0.5)]">{profile?.highest_tile || 0}</span>
+                                <span className="text-4xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(13,85,242,0.5)]">
+                                    {walletConnected && profile ? (profile.highest_tile || 0) : 'N/A'}
+                                </span>
                             </div>
                             <div className="h-16 w-16 bg-[#ecc400] rounded-lg shadow-[0_0_15px_rgba(236,196,0,0.4)] flex items-center justify-center rotate-6 group-hover:rotate-12 transition-transform z-10 border-2 border-[#fffad6]">
-                                <span className="text-[#776e65] font-bold text-xl">{profile?.highest_tile || 0}</span>
+                                <span className="text-[#776e65] font-bold text-xl">
+                                    {walletConnected && profile ? (profile.highest_tile || 0) : 'N/A'}
+                                </span>
                             </div>
                         </div>
 
@@ -179,7 +183,9 @@ export const Profile = () => {
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Games Played</p>
-                                <p className="text-xl font-bold text-white">{(profile?.games_played || 0).toLocaleString()}</p>
+                                <p className="text-xl font-bold text-white">
+                                    {walletConnected && profile ? (profile.games_played || 0).toLocaleString() : 'N/A'}
+                                </p>
                             </div>
                         </div>
 
@@ -192,7 +198,9 @@ export const Profile = () => {
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">High Score</p>
-                                <p className="text-xl font-bold text-white">{(profile?.high_score || 0).toLocaleString()}</p>
+                                <p className="text-xl font-bold text-white">
+                                    {walletConnected && profile ? (profile.high_score || 0).toLocaleString() : 'N/A'}
+                                </p>
                             </div>
                         </div>
 
@@ -221,7 +229,7 @@ export const Profile = () => {
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Avg Score</p>
                                 <p className="text-xl font-bold text-white">
-                                    {walletConnected && averageScore > 0 ? averageScore.toLocaleString() : 'N/A'}
+                                    {walletConnected && profile && averageScore > 0 ? averageScore.toLocaleString() : 'N/A'}
                                 </p>
                             </div>
                         </div>

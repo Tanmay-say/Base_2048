@@ -1,185 +1,153 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameManager } from '../game/GameManager';
+import { storage } from '../utils/localStorage';
+import soundManager from '../utils/soundManager';
+import { useGameContext } from '../context/GameContext';
 
-const STORAGE_KEY = 'base2048_gameState';
-const BEST_SCORE_KEY = 'base2048_bestScore';
-
-// Custom hook for game logic
 export const useGame = () => {
-    const [gameManager, setGameManager] = useState(null);
-    const [grid, setGrid] = useState(null);
-    const [score, setScore] = useState(0);
-    const [bestScore, setBestScore] = useState(0);
-    const [gameOver, setGameOver] = useState(false);
-    const [gameWon, setGameWon] = useState(false);
-    const [previousStates, setPreviousStates] = useState([]);
-    const [highestTile, setHighestTile] = useState(0);
+    const { gridSize } = useGameContext();
 
-    // Initialize game
+    // Initialize from saved game state if it matches current grid size
+    const [gameManager, setGameManager] = useState(() => {
+        const saved = storage.getGameState();
+        if (saved && saved.grid?.size === gridSize) {
+            const gm = new GameManager(gridSize);
+            gm.loadState(saved);
+            return gm;
+        }
+        return new GameManager(gridSize);
+    });
+    const [, forceUpdate] = useState(0);
+
+    // Single-step undo snapshot (persisted so it survives navigation / reload)
+    const [previousState, setPreviousState] = useState(() => storage.getPreviousGameState());
+
+    // Initialize best score from localStorage
+    const [bestScore, setBestScore] = useState(storage.getBestScore());
+
+    // Recreate game manager when grid size changes (preserve state if saved and same size)
     useEffect(() => {
-        const savedBestScore = localStorage.getItem(BEST_SCORE_KEY);
-        if (savedBestScore) {
-            setBestScore(parseInt(savedBestScore, 10));
+        const saved = storage.getGameState();
+        const prev = storage.getPreviousGameState();
+        const gm = new GameManager(gridSize);
+
+        if (saved && saved.grid?.size === gridSize) {
+            gm.loadState(saved);
+        }
+        setGameManager(gm);
+
+        // Only keep undo history if it's for the same grid size; otherwise reset it
+        if (prev && prev.grid?.size === gridSize) {
+            setPreviousState(prev);
+        } else {
+            setPreviousState(null);
+            storage.clearPreviousGameState();
         }
 
-        const savedState = localStorage.getItem(STORAGE_KEY);
-        const gm = new GameManager(4);
+        forceUpdate(prevCount => prevCount + 1);
+    }, [gridSize]);
 
-        if (savedState) {
+    // Memoized game state
+    const gameState = useMemo(() => ({
+        grid: gameManager.grid,
+        score: gameManager.score,
+        gameOver: gameManager.over,
+        gameWon: gameManager.won && !gameManager.keepPlaying,
+        highestTile: gameManager.highestTile || 0
+    }), [gameManager.grid, gameManager.score, gameManager.over, gameManager.won, gameManager.keepPlaying, gameManager.highestTile]);
+
+    // Update best score (local cache)
+    useEffect(() => {
+        if (gameState.score > bestScore) {
+            setBestScore(gameState.score);
+            storage.setBestScore(gameState.score);
+        }
+    }, [gameState.score, bestScore]);
+
+    // Persist last game result when game is over
+    useEffect(() => {
+        if (gameState.gameOver) {
             try {
-                const state = JSON.parse(savedState);
-                gm.loadState(state);
+                localStorage.setItem('base2048_last_score', String(gameState.score || 0));
+                localStorage.setItem('base2048_last_highest_tile', String(gameState.highestTile || 0));
             } catch (e) {
-                console.error('Failed to load saved game:', e);
+                console.warn('Failed to persist last game result:', e);
             }
         }
+    }, [gameState.gameOver, gameState.score, gameState.highestTile]);
 
-        setGameManager(gm);
-        updateState(gm);
-    }, []);
-
-    // Update state from game manager
-    const updateState = useCallback((gm) => {
-        setGrid(gm.grid.serialize());
-        setScore(gm.score);
-        setGameOver(gm.over);
-        setGameWon(gm.won && !gm.keepPlaying);
-
-        // Calculate highest tile from grid cells
-        let maxTile = 0;
-        gm.grid.cells.forEach(column => {
-            column.forEach(cell => {
-                if (cell && cell.value > maxTile) {
-                    maxTile = cell.value;
-                }
-            });
-        });
-        setHighestTile(maxTile);
-
-        // Update best score
-        const currentBest = parseInt(localStorage.getItem(BEST_SCORE_KEY) || '0', 10);
-        if (gm.score > currentBest) {
-            setBestScore(gm.score);
-            localStorage.setItem(BEST_SCORE_KEY, gm.score.toString());
+    // Persist ongoing game state so leaving/returning resumes the same board
+    useEffect(() => {
+        try {
+            storage.setGameState(gameManager.serialize());
+        } catch (e) {
+            console.warn('Failed to persist game state:', e);
         }
+    }, [gameManager, gameState.score, gameState.gameOver, gameState.highestTile]);
 
-        // Save game state
-        if (!gm.over) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gm.serialize()));
-        } else {
-            // Game is over - save final score and highest tile for GameOver screen
-            localStorage.setItem('base2048_lastScore', gm.score.toString());
-            localStorage.setItem('base2048_highestTile', maxTile.toString());
-            localStorage.removeItem(STORAGE_KEY);
+    // Play sounds for game events
+    useEffect(() => {
+        if (gameState.gameWon) {
+            soundManager.play('win');
+        } else if (gameState.gameOver) {
+            soundManager.play('gameover');
         }
-    }, []); // Remove bestScore dependency to prevent infinite loop
+    }, [gameState.gameWon, gameState.gameOver]);
 
-    // Save current state before making a move
-    const saveState = useCallback(() => {
-        if (!gameManager) return;
-
-        const currentState = gameManager.serialize();
-        setPreviousStates(prev => {
-            const newStates = [...prev, currentState];
-            // Keep only last 10 states to prevent memory issues
-            return newStates.slice(-10);
-        });
-    }, [gameManager]);
-
-    // Move tiles
     const move = useCallback((direction) => {
-        if (!gameManager) return;
+        // Freeze board when game is terminated
+        if (gameManager.isGameTerminated && gameManager.isGameTerminated()) {
+            return false;
+        }
 
-        // Save state before move for undo
-        saveState();
-
+        // Snapshot current state for undo
+        const snapshot = gameManager.serialize();
         const moved = gameManager.move(direction);
         if (moved) {
-            updateState(gameManager);
-        } else {
-            // If no move happened, remove the saved state
-            setPreviousStates(prev => prev.slice(0, -1));
+            setPreviousState(snapshot);
+            storage.setPreviousGameState(snapshot);
+            storage.setGameState(gameManager.serialize());
+            forceUpdate(prev => prev + 1);
         }
-    }, [gameManager, updateState, saveState]);
+        return moved;
+    }, [gameManager]);
 
-    // Undo last move
-    const undo = useCallback(() => {
-        if (!gameManager || previousStates.length === 0) return;
-
-        // Get the last saved state
-        const lastState = previousStates[previousStates.length - 1];
-
-        // Load that state
-        gameManager.loadState(lastState);
-        updateState(gameManager);
-
-        // Remove the used state from history
-        setPreviousStates(prev => prev.slice(0, -1));
-    }, [gameManager, previousStates, updateState]);
-
-    // Restart game
     const restart = useCallback(() => {
-        if (!gameManager) return;
-
         gameManager.restart();
-        setPreviousStates([]); // Clear undo history
-        updateState(gameManager);
-    }, [gameManager, updateState]);
+        setPreviousState(null);
+        storage.clearPreviousGameState();
+        storage.setGameState(gameManager.serialize());
+        forceUpdate(prev => prev + 1);
+    }, [gameManager]);
 
-    // Continue after winning
     const keepPlaying = useCallback(() => {
-        if (!gameManager) return;
-
         gameManager.continueGame();
-        updateState(gameManager);
-    }, [gameManager, updateState]);
+        storage.setGameState(gameManager.serialize());
+        forceUpdate(prev => prev + 1);
+    }, [gameManager]);
 
-    // Keyboard controls - Fixed to match original 2048
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (!gameManager || gameManager.isGameTerminated()) return;
-
-            // Check for modifiers
-            const modifiers = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-            if (modifiers) return;
-
-            const keyMap = {
-                38: 0,  // ArrowUp
-                39: 1,  // ArrowRight
-                40: 2,  // ArrowDown
-                37: 3,  // ArrowLeft
-                75: 0,  // K (Vim up)
-                76: 1,  // L (Vim right)
-                74: 2,  // J (Vim down)
-                72: 3,  // H (Vim left)
-                87: 0,  // W
-                68: 1,  // D
-                83: 2,  // S
-                65: 3   // A
-            };
-
-            const direction = keyMap[event.which || event.keyCode];
-            if (direction !== undefined) {
-                event.preventDefault();
-                move(direction);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [gameManager, move]);
+    const undo = useCallback(() => {
+        if (!previousState) return;
+        const gm = new GameManager(gridSize);
+        gm.loadState(previousState);
+        setGameManager(gm);
+        setPreviousState(null);
+        storage.clearPreviousGameState();
+        storage.setGameState(previousState);
+        forceUpdate(prev => prev + 1);
+    }, [previousState, gridSize]);
 
     return {
-        grid,
-        score,
+        grid: gameState.grid,
+        score: gameState.score,
         bestScore,
-        gameOver,
-        gameWon,
-        highestTile,
+        highestTile: gameState.highestTile,
+        gameOver: gameState.gameOver,
+        gameWon: gameState.gameWon,
         move,
         restart,
         keepPlaying,
         undo,
-        canUndo: previousStates.length > 0
+        canUndo: !!previousState
     };
 };

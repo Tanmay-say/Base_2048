@@ -12,6 +12,7 @@ export class GameManager {
         this.over = false;
         this.won = false;
         this.keepPlaying = false;
+        this.highestTile = 0;
 
         this.addStartTiles();
     }
@@ -23,6 +24,7 @@ export class GameManager {
         this.over = false;
         this.won = false;
         this.keepPlaying = false;
+        this.highestTile = 0;
         this.addStartTiles();
     }
 
@@ -49,6 +51,12 @@ export class GameManager {
             const value = Math.random() < 0.9 ? 2 : 4;
             const tile = new Tile(this.grid.randomAvailableCell(), value);
             this.grid.insertTile(tile);
+
+            // Track highest tile seen so far
+            if (value > this.highestTile) {
+                this.highestTile = value;
+            }
+
             return tile;
         }
     }
@@ -104,7 +112,11 @@ export class GameManager {
                         // Update score
                         this.score += merged.value;
 
-                        // Check for win
+                        // Track highest tile and check for win
+                        if (merged.value > this.highestTile) {
+                            this.highestTile = merged.value;
+                        }
+
                         if (merged.value === 2048) this.won = true;
                     } else {
                         this.moveTile(tile, positions.farthest);
@@ -212,7 +224,8 @@ export class GameManager {
             score: this.score,
             over: this.over,
             won: this.won,
-            keepPlaying: this.keepPlaying
+            keepPlaying: this.keepPlaying,
+            highestTile: this.highestTile
         };
     }
 
@@ -223,5 +236,6 @@ export class GameManager {
         this.over = state.over;
         this.won = state.won;
         this.keepPlaying = state.keepPlaying;
+        this.highestTile = state.highestTile || 0;
     }
 }
