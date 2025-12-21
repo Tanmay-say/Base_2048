@@ -8,6 +8,7 @@ import { GameOver } from './pages/GameOver';
 import { Leaderboard } from './pages/Leaderboard';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
+import { InstallPrompt } from './pwa/InstallPrompt';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <InstallPrompt />
       </Router>
     </GameProvider>
   );

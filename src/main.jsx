@@ -6,6 +6,11 @@ import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { config } from './config/wagmi';
 import './index.css';
 import App from './App.jsx';
+import { registerServiceWorker, initInstallPrompt } from './pwa/register';
+
+// Register PWA
+registerServiceWorker();
+initInstallPrompt();
 
 // Create a client for React Query
 const queryClient = new QueryClient();
