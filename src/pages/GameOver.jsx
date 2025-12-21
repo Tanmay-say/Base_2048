@@ -17,30 +17,80 @@ export const GameOver = () => {
     // Get final score from localStorage or game context
     const finalScore = score || parseInt(localStorage.getItem('base2048_lastScore')) || 0;
     const finalHighestTile = highestTile || parseInt(localStorage.getItem('base2048_highestTile')) || 0;
+    // Get best score from localStorage - this is the user's all-time high score
+    const finalBestScore = bestScore || parseInt(localStorage.getItem('base2048_bestScore')) || 0;
+
+    console.log('GameOver initialized:', { finalScore, finalBestScore, finalHighestTile });
 
     useEffect(() => {
         // Submit score when component mounts (only once)
-        if (walletConnected && walletAddress && !submitted && finalScore > 0) {
-            handleScoreSubmission();
+        console.log('=== GAMEOV ER MOUNTED ===');
+        console.log('GameOver useEffect:', { walletConnected, walletAddress, submitted, finalScore });
+
+        if (!walletConnected) {
+            console.warn('CANNOT SUBMIT - Wallet not connected');
+            return;
         }
+
+        if (!walletAddress) {
+            console.warn('CANNOT SUBMIT - No wallet address');
+            return;
+        }
+
+        if (submitted) {
+            console.log('SKIPPING - Already submitted');
+            return;
+        }
+
+        if (finalScore <= 0) {
+            console.warn('CANNOT SUBMIT - Invalid score:', finalScore);
+            return;
+        }
+
+        console.log('✅ ALL CHECKS PASSED - Calling handleScoreSubmission...');
+        handleScoreSubmission();
     }, [walletConnected, walletAddress, submitted]);
 
     const handleScoreSubmission = async () => {
-        if (submitting || submitted) return;
+        console.log('=== HANDLE SCORE SUBMISSION ===');
+        console.log('Wallet Connected:', walletConnected);
+        console.log('Wallet Address:', walletAddress);
+        console.log('Final Score:', finalScore);
+        console.log('Final Highest Tile:', finalHighestTile);
+
+        // Only submit if wallet is connected
+        if (!walletConnected || !walletAddress) {
+            console.log('Skipping score submission - wallet not connected');
+            return;
+        }
+
+        if (submitting || submitted) {
+            console.log('Skipping - already submitting or submitted');
+            return;
+        }
 
         try {
             setSubmitting(true);
+            console.log('Starting score submission...');
+            console.log('Current game score:', finalScore);
+            console.log('All-time best score:', finalBestScore);
 
-            // Submit score to leaderboard
+            // Submit current game score to leaderboard
+            console.log('Submitting to leaderboard...');
             await submitScore(walletAddress, finalScore, finalHighestTile, 0);
+            console.log('Leaderboard submission complete');
 
-            // Update profile stats
+            // Update profile stats - pass the CURRENT game score
+            // updateStats will handle calculating the new high_score using Math.max internally
+            console.log('Updating profile stats with current game score:', finalScore);
             await updateStats(finalScore, finalHighestTile);
+            console.log('Profile stats update complete');
 
             setSubmitted(true);
             console.log('Score submitted successfully!');
         } catch (error) {
             console.error('Error submitting score:', error);
+            console.error('Error details:', error.message, error.stack);
             // Don't block the user if submission fails
         } finally {
             setSubmitting(false);
@@ -84,11 +134,23 @@ export const GameOver = () => {
                         <div className="relative flex flex-col items-center">
                             <span className="text-sm text-primary font-bold tracking-[0.2em] uppercase mb-2">Final Score</span>
                             <span className="text-7xl font-bold text-white tracking-tighter">{finalScore}</span>
-                            {/* Token Reward Badge */}
-                            <div className="mt-4 flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
-                                <span className="material-symbols-outlined text-primary text-sm">token</span>
-                                <span className="text-sm font-bold text-primary">+32 $BASE</span>
-                            </div>
+                            {/* Token Reward Badge or Connect Wallet Prompt */}
+                            {walletConnected ? (
+                                <div className="mt-4 flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
+                                    <span className="material-symbols-outlined text-primary text-sm">token</span>
+                                    <span className="text-sm font-bold text-primary">+32 $BASE</span>
+                                </div>
+                            ) : (
+                                <div className="mt-4 flex flex-col items-center gap-2">
+                                    <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-4 py-1.5 rounded-full">
+                                        <span className="material-symbols-outlined text-yellow-500 text-sm">warning</span>
+                                        <span className="text-sm font-bold text-yellow-500">Score not saved</span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 text-center max-w-[250px]">
+                                        Connect your wallet to save scores and earn rewards
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../components/BottomNav';
 import { useGameContext } from '../context/GameContext';
@@ -8,8 +8,30 @@ import { uploadAvatar } from '../lib/supabase';
 export const Profile = () => {
     const navigate = useNavigate();
     const { walletConnected, walletAddress, walletAddressShort } = useGameContext();
-    const { profile, loading, updateProfile } = useProfile(walletAddress);
+    const { profile, loading, rank, averageScore, updateProfile, refreshProfile, syncBestScoreFromLocalStorage } = useProfile(walletAddress);
     const [uploading, setUploading] = useState(false);
+
+    // Refresh profile data when wallet address changes
+    useEffect(() => {
+        // The useProfile hook already fetches on walletAddress change
+        // This is just to force a manual refresh when navigating to profile
+        const timer = setTimeout(() => {
+            if (walletAddress && refreshProfile) {
+                console.log('Profile page: Force refreshing profile data');
+                refreshProfile();
+            }
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [walletAddress]);
+
+    // Sync localStorage bestScore to database when profile loads
+    useEffect(() => {
+        if (profile && walletAddress && syncBestScoreFromLocalStorage) {
+            console.log('Syncing localStorage bestScore to database...');
+            syncBestScoreFromLocalStorage();
+        }
+    }, [profile, walletAddress]);
 
     const handleAvatarUpload = async (event) => {
         try {
@@ -180,13 +202,12 @@ export const Profile = () => {
                                 <div className="p-2 bg-white/5 rounded-lg text-slate-300">
                                     <span className="material-symbols-outlined text-[20px]">public</span>
                                 </div>
-                                <span className="text-green-400 text-xs font-bold bg-green-400/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                                    <span className="material-symbols-outlined text-[10px]">arrow_upward</span> 12
-                                </span>
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Global Rank</p>
-                                <p className="text-xl font-bold text-white">#420</p>
+                                <p className="text-xl font-bold text-white">
+                                    {walletConnected && rank ? `#${rank}` : 'N/A'}
+                                </p>
                             </div>
                         </div>
 
@@ -199,7 +220,9 @@ export const Profile = () => {
                             </div>
                             <div>
                                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Avg Score</p>
-                                <p className="text-xl font-bold text-white">24,500</p>
+                                <p className="text-xl font-bold text-white">
+                                    {walletConnected && averageScore > 0 ? averageScore.toLocaleString() : 'N/A'}
+                                </p>
                             </div>
                         </div>
                     </div>
