@@ -15,7 +15,7 @@ We have already done the following in this repo:
    - In `src/main.jsx`, we import the SDK and call `sdk.actions.ready()` once when the React tree mounts.
 
 2. **Added the Mini App manifest**
-   - Created `public/.well-known/farcaster.json` with a valid schema and **placeholder URLs** using `https://YOUR_DOMAIN_HERE`.
+   - Created `public/.well-known/farcaster.json` with a valid schema and **placeholder URLs** using `https://2048tanmay.vercel.app`.
    - `accountAssociation` is present but empty; you will fill this via Base tools later.
 
 3. **Added `fc:miniapp` meta tag for rich embeds**
@@ -40,9 +40,9 @@ Examples:
 ### Your task
 1. Decide the exact **public HTTPS URL** for the app root.
 2. For the rest of this guide, we’ll refer to it as:
-   - `https://YOUR_DOMAIN_HERE/`
+   - `https://2048tanmay.vercel.app/`
 
-You’ll replace `YOUR_DOMAIN_HERE` in a couple of places in the codebase.
+You’ll replace `2048tanmay.vercel.app` in a couple of places in the codebase.
 
 ---
 
@@ -53,7 +53,7 @@ File: `public/.well-known/farcaster.json`
 This file is served at:
 
 ```text
-https://YOUR_DOMAIN_HERE/.well-known/farcaster.json
+https://2048tanmay.vercel.app/.well-known/farcaster.json
 ```
 
 ### 3.1. Replace placeholder URLs
@@ -67,7 +67,7 @@ Open `public/.well-known/farcaster.json` and update:
 - `screenshotUrls[]`
 - `ogImageUrl`
 
-Replace every `https://YOUR_DOMAIN_HERE` with your **real** domain.
+Replace every `https://2048tanmay.vercel.app` with your **real** domain.
 
 If you don’t yet have real images for `hero` / `screenshot` / `og`, you can:
 - Temporarily point them to existing images (for example, your 512x512 icon), or
@@ -118,7 +118,7 @@ You can deploy the app with `accountAssociation` empty – the Base tools will s
 After deployment (see Section 8):
 
 1. Open the Base / Farcaster **Mini App association tool** (from the Base docs).
-2. Enter your app URL: `https://YOUR_DOMAIN_HERE/`.
+2. Enter your app URL: `https://2048tanmay.vercel.app/`.
 3. Follow the instructions to sign and generate the three fields:
    - `header`
    - `payload`
@@ -141,13 +141,13 @@ We added the following block inside `<head>`:
   name="fc:miniapp"
   content='{
     "version": "next",
-    "imageUrl": "https://YOUR_DOMAIN_HERE/og/embed-card.png",
+    "imageUrl": "https://2048tanmay.vercel.app/og/embed-card.png",
     "button": {
       "title": "Play Base 2048",
       "action": {
         "type": "launch_miniapp",
         "name": "Base 2048",
-        "url": "https://YOUR_DOMAIN_HERE/"
+        "url": "https://2048tanmay.vercel.app/"
       }
     }
   }'
@@ -156,7 +156,7 @@ We added the following block inside `<head>`:
 
 ### Your tasks
 
-1. Replace `https://YOUR_DOMAIN_HERE/` with your real domain in:
+1. Replace `https://2048tanmay.vercel.app/` with your real domain in:
    - `imageUrl`
    - `button.action.url`
 
@@ -256,8 +256,8 @@ npm run build
 
 This produces a static bundle (typically in `dist/`). Deploy this to your hosting provider (Vercel, Netlify, Cloudflare Pages, S3 + CloudFront, etc.) so that:
 
-- `https://YOUR_DOMAIN_HERE/` serves the app.
-- `https://YOUR_DOMAIN_HERE/.well-known/farcaster.json` serves the manifest file.
+- `https://2048tanmay.vercel.app/` serves the app.
+- `https://2048tanmay.vercel.app/.well-known/farcaster.json` serves the manifest file.
 
 Confirm both URLs work in your browser.
 
@@ -265,7 +265,7 @@ Confirm both URLs work in your browser.
 
 ## 9. Use the Base Mini App Preview / Association tools
 
-With your app live at `https://YOUR_DOMAIN_HERE/`:
+With your app live at `https://2048tanmay.vercel.app/`:
 
 1. Open the Base Mini App **Preview** tool (linked from the official docs).
 2. Paste your app URL.
@@ -276,7 +276,7 @@ With your app live at `https://YOUR_DOMAIN_HERE/`:
 
 Then, open the **Account Association** tool:
 
-1. Enter `https://YOUR_DOMAIN_HERE/`.
+1. Enter `https://2048tanmay.vercel.app/`.
 2. Follow the instructions to sign with your Base account.
 3. Copy the generated `header`, `payload`, and `signature`.
 4. Paste them into `public/.well-known/farcaster.json` under `accountAssociation`.
@@ -291,7 +291,7 @@ Re-run the Preview tool to confirm that the app now shows as **associated** with
 Once everything looks correct in the Preview tool:
 
 1. Open the Base app on your device.
-2. Create a new post that includes your app URL, e.g.: `https://YOUR_DOMAIN_HERE/`.
+2. Create a new post that includes your app URL, e.g.: `https://2048tanmay.vercel.app/`.
 3. When you post, Base / Farcaster will render the embed card using your `fc:miniapp` metadata.
 4. Tapping the button on that card should launch your mini app using the configuration from `farcaster.json`.
 
