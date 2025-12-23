@@ -121,7 +121,13 @@ class SoundManager {
         const audio = sound.cloneNode();
         audio.volume = 0.3;
         audio.play().catch(err => {
-          console.warn(`Failed to play sound: ${name}`, err);
+          // Fallback to synthetic sound if browser can't play the file
+          if (import.meta.env.DEV) {
+            console.warn(`Failed to play sound: ${name}`, err);
+          }
+          if (!sound.synthetic) {
+            this.playSyntheticSound(name);
+          }
         });
       }
     } catch (error) {

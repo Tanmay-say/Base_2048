@@ -1,8 +1,9 @@
-import { StrictMode } from 'react';
+import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
+import { sdk } from '@farcaster/miniapp-sdk';
 import { config } from './config/wagmi';
 import './index.css';
 import App from './App.jsx';
@@ -43,13 +44,27 @@ if (projectId) {
   });
 }
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </WagmiProvider>
-  </StrictMode>,
-);
+const RootWithMiniAppReady = () => {
+  useEffect(() => {
+    // Signal to Base / Farcaster clients that the mini app is ready to display.
+    // This is safe to call in a normal browser as well.
+    try {
+      sdk.actions.ready();
+    } catch (err) {
+      console.warn('[MiniApp] sdk.actions.ready() failed or is unavailable:', err);
+    }
+  }, []);
+
+  return (
+    <StrictMode>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </WagmiProvider>
+    </StrictMode>
+  );
+};
+
+createRoot(document.getElementById('root')).render(<RootWithMiniAppReady />);
 

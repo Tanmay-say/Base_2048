@@ -18,10 +18,8 @@ export const useSwipe = (onSwipe) => {
     const moveCooldown = 120; // 120ms cooldown between moves
 
     const onTouchStart = useCallback((e) => {
-        // Prevent pull-to-refresh on mobile
-        if (e.touches[0].clientY > 50) {
-            e.preventDefault();
-        }
+        // We rely on CSS (touch-action) and layout to prevent scroll/refresh,
+        // so we avoid calling preventDefault in passive listeners.
         setTouchEnd(null);
         setTouchStart({
             x: e.targetTouches[0].clientX,
@@ -30,8 +28,7 @@ export const useSwipe = (onSwipe) => {
     }, []);
 
     const onTouchMove = useCallback((e) => {
-        // Prevent default to avoid scrolling
-        e.preventDefault();
+        // Do not call preventDefault here to avoid passive listener warnings.
         setTouchEnd({
             x: e.targetTouches[0].clientX,
             y: e.targetTouches[0].clientY

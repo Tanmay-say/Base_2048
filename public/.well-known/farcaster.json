@@ -1,0 +1,36 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Base 2048",
+    "subtitle": "Play 2048 on Base network",
+    "description": "A wallet-enabled 2048 puzzle game built on Base. Swipe, merge tiles, and climb the leaderboard.",
+    "homeUrl": "https://2048tanmay.vercel.app/",
+    "iconUrl": "https://2048tanmay.vercel.app/icons/icon-192x192.png",
+    "splashImageUrl": "https://2048tanmay.vercel.app/icons/icon-512x512.png",
+    "splashBackgroundColor": "#050A14",
+    "webhookUrl": "",
+    "heroImageUrl": "https://2048tanmay.vercel.app/og/hero.png",
+    "tagline": "Swipe, merge, and score on Base.",
+    "primaryCategory": "gaming",
+    "tags": [
+      "game",
+      "puzzle",
+      "2048",
+      "base",
+      "miniapp"
+    ],
+    "screenshotUrls": [
+      "https://2048tanmay.vercel.app/og/screenshot-1.png",
+      "https://2048tanmay.vercel.app/og/screenshot-2.png"
+    ],
+    "ogTitle": "Base 2048 - Mini App",
+    "ogDescription": "Play 2048 on Base network with wallet integration and leaderboards.",
+    "ogImageUrl": "https://2048tanmay.vercel.app/og/og-image.png",
+    "noindex": false
+  }
+}

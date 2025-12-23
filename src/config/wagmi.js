@@ -8,11 +8,16 @@ if (!projectId) {
     throw new Error('VITE_WALLETCONNECT_PROJECT_ID is not set');
 }
 
+// App URL for WalletConnect metadata
+// In dev, this should match your local URL (e.g. http://localhost:5173).
+// In production, set VITE_APP_URL to your deployed HTTPS URL.
+const appUrl = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
+
 // Metadata for your app
 const metadata = {
     name: 'Base 2048',
     description: 'Play 2048 on Base network',
-    url: 'https://base2048.app', // Update with your actual URL
+    url: appUrl,
     icons: ['https://avatars.githubusercontent.com/u/37784886']
 };
 

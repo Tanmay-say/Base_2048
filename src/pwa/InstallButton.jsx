@@ -7,16 +7,22 @@ export const InstallButton = () => {
     const [installAvailable, setInstallAvailable] = useState(false);
 
     useEffect(() => {
-        console.log('[InstallButton] ✅ Component mounted and rendering');
+        if (import.meta.env.DEV) {
+            console.log('[InstallButton] ✅ Component mounted and rendering');
+        }
 
         // Check if already installed
         const installed = isAppInstalled();
-        console.log('[InstallButton] Is app installed?', installed);
+        if (import.meta.env.DEV) {
+            console.log('[InstallButton] Is app installed?', installed);
+        }
         setIsInstalled(installed);
 
         // Listen for install availability
         const handleInstallAvailable = () => {
-            console.log('[InstallButton] Install event received');
+            if (import.meta.env.DEV) {
+                console.log('[InstallButton] Install event received');
+            }
             setInstallAvailable(true);
             setShowButton(true);
         };
@@ -25,7 +31,9 @@ export const InstallButton = () => {
 
         // Check if event already fired
         if (window.deferredPrompt) {
-            console.log('[InstallButton] Deferred prompt exists');
+            if (import.meta.env.DEV) {
+                console.log('[InstallButton] Deferred prompt exists');
+            }
             setInstallAvailable(true);
         }
 
@@ -35,7 +43,9 @@ export const InstallButton = () => {
     }, []);
 
     const handleInstallClick = async () => {
-        console.log('[InstallButton] Button clicked!');
+        if (import.meta.env.DEV) {
+            console.log('[InstallButton] Button clicked!');
+        }
 
         if (!installAvailable) {
             alert('Install prompt not ready yet.\n\nFor PWA to work:\n1. Use Chrome/Edge browser\n2. Access via HTTPS (or localhost)\n3. Wait a few seconds for browser\n\nCheck console for details.');
@@ -51,11 +61,15 @@ export const InstallButton = () => {
 
     // ALWAYS render for testing - only hide if actually installed
     if (isInstalled) {
-        console.log('[InstallButton] Hidden - app already installed');
+        if (import.meta.env.DEV) {
+            console.log('[InstallButton] Hidden - app already installed');
+        }
         return null;
     }
 
-    console.log('[InstallButton] Rendering button now!');
+    if (import.meta.env.DEV) {
+        console.log('[InstallButton] Rendering button now!');
+    }
 
     return (
         <button
